@@ -14,9 +14,17 @@
         .card { padding: 15px; background: #e8f5e9; border-radius: 12px; flex: 1; }
         .card h3 { margin: 0; font-size: 13px; color: #666; text-transform: uppercase; }
         .card p { margin: 8px 0 0; font-size: 22px; font-weight: bold; color: #2e7d32; }
-        .status-time { font-size: 13px; color: #888; background: #eee; padding: 5px 15px; border-radius: 20px; display: inline-block; }
-        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
-        .monitor-label { font-size: 14px; color: #2c3e50; font-weight: bold; }
+        .status-time { font-size: 13px; color: #888; background: #eee; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 25px 0; }
+        
+        /* ส่วนตั้งเวลา (Timer) */
+        .timer-section { background: #fff9c4; padding: 20px; border-radius: 12px; border: 1px solid #fff176; }
+        .timer-section h3 { margin-top: 0; color: #f57f17; font-size: 18px; }
+        .input-group { margin: 15px 0; display: flex; justify-content: center; align-items: center; gap: 10px; font-weight: bold; color: #555; }
+        input[type="time"] { padding: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; outline: none; }
+        .btn-save { background: #fbc02d; color: #444; border: none; padding: 12px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s; width: 100%; font-size: 16px; }
+        .btn-save:hover { background: #fdd835; transform: scale(1.02); }
+        #saveMsg { color: #2e7d32; font-size: 14px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -26,22 +34,26 @@
     <div class="status-time">อัปเดตล่าสุด: <span id="lastUpdate">กำลังโหลด...</span></div>
 
     <div class="data-box">
-        <div class="card">
-            <h3>อุณหภูมิ</h3>
-            <p><span id="temp">0</span>°C</p>
-        </div>
-        <div class="card">
-            <h3>ความชื้นอากาศ</h3>
-            <p><span id="hum">0</span>%</p>
-        </div>
-        <div class="card">
-            <h3>ความชื้นดิน</h3>
-            <p><span id="soil">0</span>%</p>
-        </div>
+        <div class="card"><h3>อุณหภูมิ</h3><p><span id="temp">0</span>°C</p></div>
+        <div class="card"><h3>ความชื้นอากาศ</h3><p><span id="hum">0</span>%</p></div>
+        <div class="card"><h3>ความชื้นดิน</h3><p><span id="soil">0</span>%</p></div>
     </div>
     
     <hr>
-    <div class="monitor-label">ระบบทำงานอัตโนมัติตามเวลาที่กำหนด</div>
+
+    <div class="timer-section">
+        <h3>⏰ ตั้งเวลาเปิด-ปิดอัตโนมัติ</h3>
+        <div class="input-group">
+            <span>เริ่ม:</span>
+            <input type="time" id="onTime">
+        </div>
+        <div class="input-group">
+            <span>สิ้นสุด:</span>
+            <input type="time" id="offTime">
+        </div>
+        <button class="btn-save" onclick="saveTimer()">บันทึกเวลาใหม่</button>
+        <div id="saveMsg">✅ บันทึกข้อมูลเรียบร้อยแล้ว!</div>
+    </div>
 </div>
 
 <script>
@@ -52,7 +64,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ดึงข้อมูลจาก Sensor มาแสดงผลแบบ Real-time
+    // 1. ดึงข้อมูลเซนเซอร์มาโชว์
     db.ref("Sensor").on("value", (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -62,6 +74,34 @@
             document.getElementById("lastUpdate").innerText = data.LastUpdate || "-";
         }
     });
+
+    // 2. ดึงเวลาที่เคยตั้งไว้จาก Firebase มาใส่ในช่อง Input
+    db.ref("Timer").once("value", (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            document.getElementById("onTime").value = data.onTime;
+            document.getElementById("offTime").value = data.offTime;
+        }
+    });
+
+    // 3. ฟังก์ชันบันทึกค่ากลับไปยัง Firebase
+    function saveTimer() {
+        const on = document.getElementById("onTime").value;
+        const off = document.getElementById("offTime").value;
+
+        if (on && off) {
+            db.ref("Timer").update({
+                onTime: on,
+                offTime: off
+            }).then(() => {
+                const msg = document.getElementById("saveMsg");
+                msg.style.display = "block";
+                setTimeout(() => { msg.style.display = "none"; }, 2500);
+            });
+        } else {
+            alert("กรุณาระบุเวลาให้ครบถ้วนก่อนบันทึกครับ");
+        }
+    }
 </script>
 
 </body>

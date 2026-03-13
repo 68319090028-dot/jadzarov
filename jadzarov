@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Jadzarov Smart Farm Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f4f7; text-align: center; padding: 40px; }
+        .dashboard { display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 15px rgba(0,0,0,0.1); width: 220px; }
+        .title { font-size: 1.2rem; color: #555; margin-bottom: 15px; }
+        .value { font-size: 2.8rem; font-weight: bold; color: #2c3e50; }
+        #temp-card { border-top: 8px solid #ff4757; }
+        #humid-card { border-top: 8px solid #3498db; }
+        #soil-card { border-top: 8px solid #2ecc71; }
+    </style>
+</head>
+<body>
+    <h1>ระบบติดตามเซนเซอร์ (Jadzarov)</h1>
+    <div class="dashboard">
+        <div class="card" id="temp-card">
+            <div class="title">อุณหภูมิ</div>
+            <div class="value"><span id="temp">--</span>°C</div>
+        </div>
+        <div class="card" id="humid-card">
+            <div class="title">ความชื้นอากาศ</div>
+            <div class="value"><span id="humid">--</span>%</div>
+        </div>
+        <div class="card" id="soil-card">
+            <div class="title">ความชื้นดิน</div>
+            <div class="value"><span id="soil">--</span>%</div>
+        </div>
+    </div>
+
+    <script>
+        // ตั้งค่าให้ตรงกับฐานข้อมูล jadzarov ของคุณ
+        const firebaseConfig = {
+            databaseURL: "https://jadzarov-b3839-default-rtdb.firebaseio.com"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // ดึงข้อมูลจาก Path "Sensor" ที่ส่งมาจาก NodeMCU
+        database.ref('Sensor').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('temp').innerText = data.Temperature;
+                document.getElementById('humid').innerText = data.Humidity;
+                document.getElementById('soil').innerText = data.SoilMoisture;
+            }
+        });
+    </script>
+</body>
+</html>

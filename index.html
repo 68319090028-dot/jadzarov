@@ -85,7 +85,7 @@
             }
         });
 
-        // 2. รับสถานะ Buzzer
+        // 2. รับสถานะ 
         database.ref('Control/Buzzer').on('value', (snapshot) => {
             const status = snapshot.val();
             const display = document.getElementById('buzzer-status');
